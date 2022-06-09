@@ -113,8 +113,10 @@ export class App extends React.Component {
       <div className={s.app}>
         <Searchbar onSubmit={this.doSearch} />
         <ImageGallery items={items} showModalCb={this.showModal} />
+
         {loading && <Loader />}
-        { this.nextPageAvailable && <Button onClickCb={this.advancePage}>Load more</Button> }
+        {this.nextPageAvailable && !loading && <Button onClickCb={this.advancePage}>Load more</Button>}
+        
         <Modal base={this.constructor.modalBase} {...modal} hideCb={this.hideModal} />
       </div>
     );
