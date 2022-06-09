@@ -22,6 +22,7 @@ export class App extends React.Component {
       key: process.env.REACT_APP_SEARCH_KEY,
       image_type: "photo",
       orientation: "horizontal",
+
       per_page: 12,
     },
     loading: false,
@@ -39,7 +40,7 @@ export class App extends React.Component {
   async fetchImages (list) {
     var promises, responces
     // form and request urls
-    promises = list.map(item => fetch((Math.random() > 1 ? "asdf" : "") + item.webformatURL));
+    promises = list.map(item => fetch(item.webformatURL));
     responces = await Promise.allSettled(promises);
     // form and request blobs
     promises = responces.map(r => r.value?.blob());
