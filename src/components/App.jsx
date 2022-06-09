@@ -80,7 +80,7 @@ export class App extends React.Component {
         page,
         itemsAvailable: data[api.fields.total],
       },
-      () => setTimeout(e => window.scrollTo({ top: scrollTo + 8, behavior: scrollTo === 0 ? "instant" : "smooth" }), 1),
+      () => window.scrollTo({ top: scrollTo + 8, behavior: scrollTo === 0 ? "instant" : "smooth" }),
     );
   }
   
