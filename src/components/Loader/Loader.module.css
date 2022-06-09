@@ -1,0 +1,12 @@
+.wrapper {
+  padding-top: 32px;
+  padding-bottom: 64px;
+  margin: auto;
+}
+
+.wrapper2 {
+  transform: translate(-8px, -8px);
+  font-size: 0;
+  line-height: 0;
+  text-align: center;
+}
