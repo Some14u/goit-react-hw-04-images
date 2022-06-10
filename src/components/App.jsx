@@ -69,7 +69,7 @@ export class App extends React.Component {
   };
 
   doSearch = async () => {
-    this.setState({ isLoading: true });
+    this.setState({ isLoading: true, error: null });
 
     const [items, itemsAvailable] = await this.fetchImages();
 
@@ -105,12 +105,11 @@ export class App extends React.Component {
   }
 
   componentDidUpdate(_, prevState) {
-    const state = this.state;
-    if (
-      state.searchString !== prevState.searchString ||
-      state.page !== prevState.page ||
-      state.items.length < prevState.items.length
-    ) this.doSearch().catch( e => this.setState({error: e}) );
+  if (
+      this.state.searchString !== prevState.searchString ||
+      this.state.page !== prevState.page ||
+      this.state.items.length < prevState.items.length
+    ) this.doSearch().catch( e => this.setState({error: e.message}) );
   }
 
   render() {
@@ -118,11 +117,15 @@ export class App extends React.Component {
     return (
       <div className={s.app}>
         <Searchbar onSubmit={this.onSubmit} />
-        { error && <><h2>Something went wrong. Please, reload page.</h2><p>{error}</p></> }
-        { !error && <ImageGallery items={items} showModalCb={this.showModal} /> }
-        { isLoading && <Loader /> }
-        { !isLoading && this.nextPageAvailable && <Button onClickCb={this.advancePage}>Load more</Button> }
-        <Modal base={this.constructor.modalBase} {...modal} hideCb={this.hideModal} />
+        { error && <><h2>Something went wrong. Please, reload the page.</h2><p>{error}</p></> }
+        {!error && (
+          <>
+            <ImageGallery items={items} showModalCb={this.showModal} />
+            { isLoading && <Loader /> }
+            { !isLoading && this.nextPageAvailable && <Button onClickCb={this.advancePage}>Load more</Button> }
+            <Modal base={this.constructor.modalBase} {...modal} hideCb={this.hideModal} />
+          </>
+        )}
       </div>
     );
   }
