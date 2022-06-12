@@ -1,32 +1,14 @@
 import React from "react";
 import Searchbar from "./Searchbar";
-import axios from "axios";
 import ImageGallery from "./ImageGallery";
 import Modal from "./Modal";
 import Button from "./Button";
 import Loader from "./Loader"
 import s from "./App.module.css";
+import pixabay from "services/pixabayApi";
+
 
 export class App extends React.Component {
-
-  static api = {
-    url: "https://pixabay.com/api/",
-    fields: {
-      total: "totalHits",
-      items: "hits",
-      query: "q",
-      page: "page",
-      perPage: "per_page",
-      previewURL: "webformatURL",
-    },
-    defaultQuery: {
-      key: process.env.REACT_APP_SEARCH_KEY,
-      image_type: "photo",
-      orientation: "horizontal",
-      per_page: 12,
-    },
-  }
-
   static modalBase = document.getElementById("modal");
 
   state = {
@@ -36,42 +18,26 @@ export class App extends React.Component {
     modal: { visible: false },
     isLoading: false,
     error: null,
+    preloadImages: false,
   };
 
-  get requestParams() {
-    const api = this.constructor.api;
-    const { searchString, page } = this.state;
-    return {
-      ...api.defaultQuery,
-      [api.fields.query]: searchString,
-      [api.fields.page]: page,
-    };
-  }
-
   get nextPageAvailable() {
-    const [api, { items, page, itemsAvailable }] = [this.constructor.api, this.state];
+    const [api, { items, page, itemsAvailable }] = [pixabay.api, this.state];
     return items.length!==0 && page * api.defaultQuery[api.fields.perPage] < itemsAvailable;
   }
 
-  async fetchImages() {
-    const api = this.constructor.api;
-    // Get images list
-    const { data } = await axios.get(api.url, { params: this.requestParams });
-    const items = data ? data[api.fields.items] : [];
-    // For each entrie predownload image and obtain local url
-    const promises = items.map(item => axios.get(item[api.fields.previewURL], { responseType: 'blob' }));
-    const responces = await Promise.allSettled(promises);
-    const localURLs = responces.map(r => r.value && URL.createObjectURL(r.value.data));
-    // Substitude remote urls to local ones
-    items.forEach((item, idx) => item[api.fields.previewURL] = localURLs[idx] || "");
-
-    return [ items, data[api.fields.total] ];
-  };
+  componentDidUpdate(_, prevState) {
+  if (
+      this.state.searchString !== prevState.searchString ||
+      this.state.page !== prevState.page ||
+      this.state.items.length < prevState.items.length
+    ) this.doSearch().catch( e => this.setState({error: e.message}) );
+  }
 
   doSearch = async () => {
     this.setState({ isLoading: true, error: null });
 
-    const [items, itemsAvailable] = await this.fetchImages();
+    const [items, itemsAvailable] = await pixabay.fetchImages(this.state);
 
     const scrollTo = document.getElementById("gallery")?.scrollHeight || 0;
     this.setState(
@@ -83,7 +49,6 @@ export class App extends React.Component {
       () => window.scrollTo({ top: scrollTo + 8, behavior: scrollTo === 0 ? "instant" : "smooth" }),
     );
   }
-
 
   showModal = (url, tags) => {
     const modal = { visible: true, url, tags };
@@ -104,19 +69,15 @@ export class App extends React.Component {
     this.setState({ searchString, items: [], itemsAvailable: 0, page: 1 });
   }
 
-  componentDidUpdate(_, prevState) {
-  if (
-      this.state.searchString !== prevState.searchString ||
-      this.state.page !== prevState.page ||
-      this.state.items.length < prevState.items.length
-    ) this.doSearch().catch( e => this.setState({error: e.message}) );
+  togglePreloadImages = () => {
+    this.setState(oldState => ({ preloadImages: !oldState.preloadImages }));
   }
 
   render() {
-    const { items, modal, isLoading, error } = this.state;
+    const { items, modal, isLoading, error, preloadImages } = this.state;
     return (
       <div className={s.app}>
-        <Searchbar onSubmit={this.onSubmit} />
+        <Searchbar onSubmit={this.onSubmit} preloadImagesState={preloadImages} onPreloadImagesChange={this.togglePreloadImages} />
         { error && <><h2>Something went wrong. Please, reload the page.</h2><p>{error}</p></> }
         {!error && (
           <>
