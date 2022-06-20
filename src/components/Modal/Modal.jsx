@@ -1,38 +1,33 @@
-import React from "react";
+import { useEffect } from "react";
 import ReactDOM from "react-dom";
 import s from "./Modal.module.css";
 import PropTypes from "prop-types";
 
+const closeKey = "Escape";
 
-export default class Modal extends React.Component {
-  static closeKey = "Escape";
+export default function Modal({ base, visible, url, tags, hideCb }) {
+  useEffect(() => {
+    function keyboardListener(event) {
+      if (event.key === closeKey) hideCb();
+    }
+    document.addEventListener("keydown", keyboardListener);
+    return () => document.removeEventListener("keydown", keyboardListener);
+  }, [hideCb]);
 
-  componentDidMount() {
-    document.addEventListener("keydown", this.keyboardListener);
+  function handleOverlayClick(event) {
+    if (event.target === event.currentTarget) hideCb();
   }
 
-  componentWillUnmount() {
-    document.removeEventListener("keydown", this.keyboardListener);
-  }
+  if (!visible) return;
 
-    keyboardListener = e => {
-    if (e.key === this.constructor.closeKey) this.props.hideCb();
-  }
-
-  handleOverlayClick = e => e.target === e.currentTarget && this.props.hideCb();
-
-  render() {
-    const { base, visible, url, tags } = this.props;
-    if (!visible) return;
-
-    return ReactDOM.createPortal(
-      <div className={s.overlay} onClick={ this.handleOverlayClick }>
+  return ReactDOM.createPortal(
+      <div className={s.overlay} onClick={ handleOverlayClick }>
         <div className={s.modal}>
           <img src={url} alt={tags}/>
         </div>
       </div>
-    , base);
-  }
+    , base
+  );
 }
 
 Modal.propTypes = {

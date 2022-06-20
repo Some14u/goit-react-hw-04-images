@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import s from "./ImageGallery.module.css";
 import PropTypes from "prop-types";
 import ImageGalleryItem from "./ImageGalleryItem";
 
-export default function ImageGallery({ items, showModalCb }) {
+const ImageGallery = forwardRef(({ items, showModalCb }, galleryRef) => {
   if (items.length === 0) return;
 
   const buildItem = ({ id, ...props }) => {
@@ -10,11 +11,13 @@ export default function ImageGallery({ items, showModalCb }) {
   }
 
   return (
-    <ul id="gallery" className={s.gallery}>
-      { items.map(buildItem) }
+    <ul id="gallery" className={s.gallery} ref={galleryRef}>
+      {items.map(buildItem)}
     </ul>
   );
-}
+});
+
+export default ImageGallery;
 
 ImageGallery.propTypes = {
   items: PropTypes.arrayOf(PropTypes.shape({
